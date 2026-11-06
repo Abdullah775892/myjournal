@@ -2228,6 +2228,27 @@
         addEventListener('keydown', e => {
           if (e.target.closest && e.target.closest('input,select,dialog,[contenteditable]')) return;
           const mod = e.ctrlKey || e.metaKey;
+          if (mod && e.code === 'KeyA') {
+            if (e.target.closest && e.target.closest('[contenteditable]')) return;
+            e.preventDefault();
+            const p = cur();
+            if (!p) return;
+            S.selS = S.selP = S.sel = null;
+            const ks = (p.strokes || []).slice();
+            const ims = (p.imgs || []).slice();
+            if (ks.length || ims.length) {
+              S.grp = {p, ks, ims};
+              clrGrp();
+              showSel(elOf(p.id), p);
+              tb();
+              sv('تم تحديد جميع العناصر');
+            } else {
+              S.grp = null;
+              tb();
+              sv('لا توجد عناصر لتحديدها', 1);
+            }
+            return;
+          }
           if (mod && e.code === 'KeyZ') {
             e.preventDefault();
             e.shiftKey ? redo() : undo()
@@ -2795,7 +2816,11 @@
         }) : [a, b];
         vp.onpointerdown = e => {
           cancelAnimationFrame(S.inr);
-          if (e.target.closest && e.target.closest('.note-editor')) return;
+          if (e.target.closest && e.target.closest('.note-editor')) {
+            const ed = e.target.closest('.note-editor');
+            ed.focus({preventScroll:true});
+            return;
+          }
           if (e.target.closest && e.target.closest('.note-item')) return;
 
           // أول نقرة خارج النص بعد إنشائه تنهي التحرير فقط،
@@ -2890,7 +2915,10 @@
             gest = null;
             return
           }
-          if (S.tool === 'select') return;
+          if (S.tool === 'select') {
+            e.preventDefault();
+            return;
+          }
           const el = e.target.closest('.pg');
           if (!el) return;
           if (S.tool === 'pin') {
@@ -4713,10 +4741,16 @@
               S.tt = setTimeout(() => save(p), 500)
             };
             e.onpointerdown = ev => {
+              // اترك المتصفح يضع مؤشر الكتابة داخل النص، مع منع الصفحة
+              // من اعتبار النقرة بداية رسم أو تحديد شكل.
               ev.stopPropagation();
-              ev.stopImmediatePropagation();
               document.querySelectorAll('.note-item.on').forEach(x => x.classList.remove('on'));
               d.classList.add('on');
+              if (document.activeElement !== e) e.focus({preventScroll:true});
+            };
+            e.onclick = ev => {
+              ev.stopPropagation();
+              e.focus({preventScroll:true});
             };
             e.onfocus = () => {
               document.querySelectorAll('.note-item.on').forEach(x => x.classList.remove('on'));
