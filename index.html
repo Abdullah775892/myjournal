@@ -96,11 +96,11 @@ header.col #strip,header.col #props{display:none}
 .snapbox{position:absolute;border:2px dashed var(--ac);background:#0ea5e922;pointer-events:none;z-index:6}
 #pages{padding-top:28px}
 
-.tx{position:absolute;pointer-events:none;touch-action:none}body.txm .tx{pointer-events:auto}
-.tt{outline:none;min-height:1.4em;line-height:1.45;white-space:pre-wrap;word-break:break-word;cursor:text;user-select:text;-webkit-user-select:text}
-.tx.on .tt{outline:2px dashed var(--ac);outline-offset:3px}
-.tx i{display:none;position:absolute;width:26px;height:26px;border-radius:50%;background:var(--ac);color:#fff;text-align:center;line-height:26px;font-style:normal;font-size:12px;cursor:pointer;z-index:3}
-.tx.on i{display:block}.tx .th{left:-32px;top:-4px;cursor:move}.tx .tr{right:-32px;bottom:-4px;cursor:ew-resize}.tx .tdel{left:-32px;top:28px}.tx .ta{right:-32px;top:-4px;cursor:crosshair}
+.note-item{position:absolute;pointer-events:none;touch-action:none}body.note-mode .note-item{pointer-events:auto}
+.note-editor{outline:none;min-height:1.4em;line-height:1.45;white-space:pre-wrap;word-break:break-word;cursor:text;user-select:text;-webkit-user-select:text}
+.note-item.on .note-editor{outline:2px dashed var(--ac);outline-offset:3px}
+.note-item i{display:none;position:absolute;width:26px;height:26px;border-radius:50%;background:var(--ac);color:#fff;text-align:center;line-height:26px;font-style:normal;font-size:12px;cursor:pointer;z-index:3}
+.note-item.on i{display:block}.note-item .th{left:-32px;top:-4px;cursor:move}.note-item .tr{right:-32px;bottom:-4px;cursor:ew-resize}.note-item .tdel{left:-32px;top:28px}.note-item .ta{right:-32px;top:-4px;cursor:crosshair}
 .ct{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
 </style></head><body>
 <header>
@@ -117,7 +117,7 @@ header.col #strip,header.col #props{display:none}
 <div class="pn" data-p="ann">
 <div class="gp"><button class="big" data-t="pen" data-fly="1" title="قلم — اضغط مرة ثانية لخياراته"><i>✒️</i>قلم ▾</button><button class="big" data-t="highlighter" data-fly="1" title="مظلل — اضغط مرة ثانية لخياراته"><i>🖍️</i>مظلل ▾</button></div>
 <div class="gp"><button class="big" data-t="eraser" title="ممحاة: تمسح النقطة فقط"><i>🧽</i>ممحاة نقطة</button><button class="big" data-t="eraserL" title="ممحاة: تمسح الخط كاملاً"><i>✂️</i>ممحاة خط</button></div>
-<div class="gp"><button class="big" data-t="shape" data-fly="1" title="الأشكال وخصائصها"><i>📐</i>أشكال ▾</button><button class="big" data-t="text" data-fly="1" title="نص — اضغط على الصفحة لإضافته"><i>🔤</i>نص ▾</button><button class="big" data-t="callout" data-fly="1" title="فقاعة (Callout) بسهم يشير لنقطة"><i>💬</i>فقاعة ▾</button></div>
+<div class="gp"><button class="big" data-t="shape" data-fly="1" title="الأشكال وخصائصها"><i>📐</i>أشكال ▾</button></div><div class="gp text-tools-group"><button id="textToolBtn" class="big text-tool-btn" data-t="text" data-fly="1" title="نص — اضغط على الصفحة لإضافته"><i>🔤</i>نص ▾</button><button id="calloutToolBtn" class="big text-tool-btn" data-t="callout" data-fly="1" title="فقاعة (Callout) بسهم يشير لنقطة"><i>💬</i>فقاعة ▾</button></div>
 <div class="gp"><button class="big" data-t="pin" title="دبوس: تسجيل صوتي / صورة / PDF / ملاحظة"><i>📌</i>دبوس</button><button class="big" id="bImg" title="إدراج صورة"><i>🖼️</i>صورة</button></div>
 </div>
 <div class="pn" data-p="page">
@@ -329,7 +329,7 @@ addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('input,sele
  if(mod&&e.code==='KeyZ'){e.preventDefault();e.shiftKey?redo():undo()}else if(mod&&e.code==='KeyY'){e.preventDefault();redo()}
  else if(mod&&e.code==='KeyC'&&selItems()){e.preventDefault();copySel()}else if(mod&&e.code==='KeyX'&&selItems()){e.preventDefault();copySel(1)}
  else if((e.key==='Delete'||e.key==='Backspace')&&delSel())e.preventDefault()});
-function tb(){$('sbar').hidden=!(selItems()||S.clip);$('shp').hidden=S.tool!=='shape';$('fil').hidden=!(S.tool==='shape'||S.selS||S.grp);$('props').classList.toggle('visible',!!S.selS||!!S.grp||['pen','highlighter','shape'].includes(S.tool))}
+function tb(){$('sbar').hidden=!(selItems()||S.clip);$('shp').hidden=S.tool!=='shape';$('fil').hidden=!(S.tool==='shape'||S.selS||S.grp);$('props').classList.toggle('visible',!!S.selS||!!S.grp)}
 function showSel(el,p){tb();const o=el.lastChild;o.innerHTML='';if(S.grp&&S.grp.p===p)return showGrp(o,S.grp);const k=S.selS;if(!k||S.selP!==p||!p.strokes.includes(k))return;
  const a=k.a,b=k.b,line=k.sh==='line'||k.sh==='arrow'||k.sh==='dbl',x1=Math.min(a.x,b.x),y1=Math.min(a.y,b.y),x2=Math.max(a.x,b.x),y2=Math.max(a.y,b.y);
  const add=(h,x,y,t)=>{const i=document.createElement('i');i.dataset.h=h;i.className='hp';i.style.cssText=`left:${x}px;top:${y}px;transform:scale(${1/S.z})`;if(t)i.textContent=t;o.appendChild(i)};
@@ -338,7 +338,11 @@ function showSel(el,p){tb();const o=el.lastChild;o.innerHTML='';if(S.grp&&S.grp.
  add('del',(x1+x2)/2,y1-(34/S.z),'✕')}
 function pickShape(el,e){const p=pg(el.dataset.id),pt=xy(e,el),t=(e.pointerType==='touch'?18:10)/S.z;
  for(let i=p.strokes.length-1;i>=0;i--){const k=p.strokes[i];if(!k.sh)continue;
-  if(hit(k.pts,pt,t+k.w/2)||(k.fill&&pt.x>=Math.min(k.a.x,k.b.x)&&pt.x<=Math.max(k.a.x,k.b.x)&&pt.y>=Math.min(k.a.y,k.b.y)&&pt.y<=Math.max(k.a.y,k.b.y)))return k}return null}
+  const x1=Math.min(k.a.x,k.b.x),x2=Math.max(k.a.x,k.b.x),y1=Math.min(k.a.y,k.b.y),y2=Math.max(k.a.y,k.b.y);
+  const insideBox=pt.x>=x1&&pt.x<=x2&&pt.y>=y1&&pt.y<=y2;
+  const insideEllipse=k.sh==='ell'&&x2>x1&&y2>y1&&(((pt.x-(x1+x2)/2)**2)/(((x2-x1)/2)**2)+((pt.y-(y1+y2)/2)**2)/(((y2-y1)/2)**2)<=1);
+  const insideRect=k.sh==='rect'&&insideBox;
+  if(hit(k.pts,pt,t+k.w/2)||insideRect||insideEllipse)return k}return null}
 function syncUI(k){S.color=k.c;S.w=k.w;$('cc').value=k.c;$('sw').value=k.w;$('swv').value=k.w;S.solid=!!k.fill;if(k.fill){S.fill=k.fill;$('fc').value=k.fill}$('fm').textContent=S.solid?'مصمت':'مفرغ';$('fm').classList.toggle('on',S.solid);$('lineDs').value=k.ds||'solid'}
 function startEdit(e,h){const p=S.selP,el=elOf(p.id),i=p.strokes.indexOf(S.selS);if(i<0)return;pushU(p);
  if(h==='del'){p.strokes.splice(i,1);S.selS=null;repaint(el,p);showSel(el,p);save(p);return}
@@ -407,7 +411,7 @@ function erase(d,pt){const r=Math.max(8,S.w*2),o=[];let ch=0;
  if(ch){if(!d.pushed){pushU(d.p);d.pushed=1}d.p.strokes=o;d.dirty=1;sched(d.p)}}
 const shp=(t,a,b)=>t==='rect'?[a,{x:b.x,y:a.y},b,{x:a.x,y:b.y},a]:t==='ell'?Array.from({length:61},(_,i)=>{const th=i/60*6.2832;return{x:(a.x+b.x)/2+Math.cos(th)*(b.x-a.x)/2,y:(a.y+b.y)/2+Math.sin(th)*(b.y-a.y)/2}}):[a,b];
 vp.onpointerdown=e=>{
- cancelAnimationFrame(S.inr);if(e.target.closest&&e.target.closest('.tx'))return;document.querySelectorAll('.tx.on').forEach(x=>x.classList.remove('on'));
+ cancelAnimationFrame(S.inr);if(e.target.closest&&e.target.closest('.note-item'))return;document.querySelectorAll('.note-item.on').forEach(x=>x.classList.remove('on'));
  if(e.pointerType==='pen')S.penAt=Date.now();
  else if(e.pointerType==='touch'&&Date.now()-S.penAt<1200)return; /* palm rejection */
  if(e.pointerType==='mouse'&&e.button!==0)return;
@@ -472,7 +476,7 @@ vp.onpointerup=vp.onpointercancel=e=>{
  if(d.tool==='pen'){clearTimeout(d.ht);d.dead=1;if(d.lq)cancelAnimationFrame(d.lq);repaint(d.el,d.p);lvClear(d.el)}else sched(d.p)};
 
 /* ---------- tools UI ---------- */
-function setTool(t){if(typeof fly!=='undefined')fly.hidden=true;S.tool=t;document.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));if(t!=='select'&&t!=='shape'&&S.selS){const p=S.selP;S.selS=S.selP=null;const o=elOf(p.id);if(o)showSel(o,p)}if(t==='highlighter'&&lum(S.color)<.45){S.color='#facc15';$('cc').value=S.color}if(t!=='lasso')clrGrp();tb();document.body.classList.toggle('sel',t==='select');document.body.classList.toggle('las',t==='lasso');document.body.classList.toggle('txm',t==='select'||t==='text'||t==='callout');document.body.classList.toggle('shs',t==='select'||t==='shape'||t==='lasso');
+function setTool(t){if(typeof fly!=='undefined')fly.hidden=true;S.tool=t;document.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));if(t!=='select'&&t!=='shape'&&S.selS){const p=S.selP;S.selS=S.selP=null;const o=elOf(p.id);if(o)showSel(o,p)}if(t==='highlighter'&&lum(S.color)<.45){S.color='#facc15';$('cc').value=S.color}if(t!=='lasso')clrGrp();tb();document.body.classList.toggle('sel',t==='select');document.body.classList.toggle('las',t==='lasso');document.body.classList.toggle('note-mode',t==='select'||t==='text'||t==='callout');document.body.classList.toggle('shs',t==='select'||t==='shape'||t==='lasso');
  vp.style.cursor=t==='select'?'default':t==='text'||t==='callout'?'text':DOT}
 document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{const t=b.dataset.t,was=S.tool===t;if(!was)fly.hidden=true;setTool(t);if(b.dataset.fly&&FL[t]&&was)FL[t](b)});
 document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{S.shape=b.dataset.s;document.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b))});
@@ -656,12 +660,13 @@ function tailPts(t,H){const cx=t.x+t.w/2,cy=t.y+H/2,dx=t.ax-cx,dy=t.ay-cy,l=Math
 const tailHtml=(t,H)=>'<polygon points="'+tailPts(t,H).map(p=>p.join(',')).join(' ')+'" fill="'+t.bg+'" stroke="'+t.bd+'" stroke-width="2" stroke-linejoin="round"/>';
 function renderTxts(L,p){(p.txts||[]).forEach(t=>{
  let sv=null;if(t.k==='callout'){sv=document.createElementNS('http://www.w3.org/2000/svg','svg');sv.setAttribute('class','ct');sv.innerHTML=tailHtml(t,60);L.appendChild(sv)}
- const d=mk('div','tx'),e=mk('div','tt');d.style.cssText='left:'+t.x+'px;top:'+t.y+'px;width:'+t.w+'px';
+ const d=mk('div','note-item'),e=mk('div','note-editor');d.style.cssText='left:'+t.x+'px;top:'+t.y+'px;width:'+t.w+'px';
  e.contentEditable='true';e.dir='auto';e.textContent=t.t||'';e.style.cssText='font-size:'+t.s+'px;color:'+t.c+';'+(t.k==='callout'?'background:'+t.bg+';border:2px solid '+t.bd+';border-radius:12px;padding:8px 10px':'padding:2px 4px');
  d.appendChild(e);
  const upT=()=>{if(sv)sv.innerHTML=tailHtml(t,d.offsetHeight||60)};
  e.oninput=()=>{t.t=e.innerText.replace(/\n$/,'');upT();clearTimeout(S.tt);S.tt=setTimeout(()=>save(p),500)};
- e.onfocus=()=>{document.querySelectorAll('.tx.on').forEach(x=>x.classList.remove('on'));d.classList.add('on')};
+ e.onpointerdown=ev=>{ev.stopPropagation();if(S.tool!=='select')setTool('select');document.querySelectorAll('.note-item.on').forEach(x=>x.classList.remove('on'));d.classList.add('on')};
+ e.onfocus=()=>{document.querySelectorAll('.note-item.on').forEach(x=>x.classList.remove('on'));d.classList.add('on')};
  [['th','mv','✥'],['tr','rs','⇲'],['tdel','del','✕']].concat(t.k==='callout'?[['ta','an','◉']]:[]).forEach(([c,m,g])=>{const h=mk('i',c,g);h.onpointerdown=ev=>txDown(ev,p,t,d,m,upT);d.appendChild(h)});
  L.appendChild(d);setTimeout(upT,0)})}
 function txDown(e,p,t,d,mode,upT){e.stopPropagation();e.preventDefault();const el=elOf(p.id);
@@ -672,7 +677,7 @@ function txDown(e,p,t,d,mode,upT){e.stopPropagation();e.preventDefault();const e
   d.style.left=t.x+'px';d.style.top=t.y+'px';d.style.width=t.w+'px';upT()};
  d.onpointerup=()=>{d.onpointermove=d.onpointerup=null;if(ch)save(p);else S.U.pop()}}
 function addTxt(p,pt,k,el){pushU(p);const t={id:uid('x'),k,x:pt.x,y:pt.y,w:k==='callout'?240:220,t:'',s:S.ts||22,c:S.color,bg:S.tbg||'#fff8c5',bd:S.color};if(k==='callout'){t.ax=Math.max(10,pt.x-70);t.ay=pt.y+110}
- (p.txts=p.txts||[]).push(t);renderImgs(el,p);save(p);setTool('select');setTimeout(()=>{const es=el.querySelectorAll('.tx .tt'),l=es[es.length-1];if(l)l.focus()},30)}
+ (p.txts=p.txts||[]).push(t);renderImgs(el,p);save(p);setTool('select');setTimeout(()=>{const es=el.querySelectorAll('.note-item .note-editor'),l=es[es.length-1];if(l){l.focus();const r=document.createRange();r.selectNodeContents(l);r.collapse(false);const q=window.getSelection();q.removeAllRanges();q.addRange(r)}},30)}
 function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
 function wrapT(x,t,mw){const out=[];String(t).split('\n').forEach(par=>{let cur='';par.split(/\s+/).forEach(w=>{const tt=cur?cur+' '+w:w;if(cur&&x.measureText(tt).width>mw){out.push(cur);cur=w}else cur=tt});out.push(cur)});return out}
 function drawTxts(x,p,s){(p.txts||[]).forEach(t=>{x.save();x.scale(s,s);x.font=t.s+'px "IBM Plex Sans Arabic",system-ui,sans-serif';
