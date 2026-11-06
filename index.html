@@ -2226,20 +2226,33 @@
           return true
         }
         addEventListener('keydown', e => {
-          if (e.target.closest && e.target.closest('input,select,dialog,[contenteditable]')) return;
           const mod = e.ctrlKey || e.metaKey;
+          const inTextEditor = !!(e.target.closest && e.target.closest('[contenteditable="true"]'));
+          if (mod && e.code === 'KeyA' && inTextEditor) {
+            // دع المتصفح يحدد النص داخل محرر الكتابة.
+            return;
+          }
+          if (e.target.closest && e.target.closest('input,select,dialog,textarea,[contenteditable]')) return;
           if (mod && e.code === 'KeyA') {
-            if (e.target.closest && e.target.closest('[contenteditable]')) return;
             e.preventDefault();
             const p = cur();
             if (!p) return;
             S.selS = S.selP = S.sel = null;
             const ks = (p.strokes || []).slice();
             const ims = (p.imgs || []).slice();
-            if (ks.length || ims.length) {
-              S.grp = {p, ks, ims};
+            const txts = (p.txts || []).slice();
+            if (ks.length || ims.length || txts.length) {
+              S.grp = {p, ks, ims, txts};
               clrGrp();
               showSel(elOf(p.id), p);
+              txts.forEach(t => {
+                const node = elOf(p.id)?.querySelectorAll('.note-item');
+                if (!node) return;
+                node.forEach(n => {
+                  const ed = n.querySelector('.note-editor');
+                  if (ed && ed.textContent === (t.t || '')) n.classList.add('on');
+                });
+              });
               tb();
               sv('تم تحديد جميع العناصر');
             } else {
@@ -4723,7 +4736,9 @@
             const d = mk('div', 'note-item'),
               e = mk('div', 'note-editor');
             d.style.cssText = 'left:' + t.x + 'px;top:' + t.y + 'px;width:' + t.w + 'px';
+            e.setAttribute('contenteditable', 'true');
             e.contentEditable = 'true';
+            e.setAttribute('spellcheck', 'false');
             e.tabIndex = 0;
             e.setAttribute('role', 'textbox');
             e.setAttribute('aria-multiline', 'true');
@@ -4738,20 +4753,27 @@
               t.t = e.innerText.replace(/\n$/, '');
               upT();
               clearTimeout(S.tt);
-              S.tt = setTimeout(() => save(p), 500)
+              S.tt = setTimeout(() => save(p), 250)
             };
-            e.onpointerdown = ev => {
-              // اترك المتصفح يضع مؤشر الكتابة داخل النص، مع منع الصفحة
-              // من اعتبار النقرة بداية رسم أو تحديد شكل.
+            e.onblur = () => {
+              t.t = e.innerText.replace(/\n$/, '');
+              clearTimeout(S.tt);
+              save(p)
+            };
+            e.addEventListener('pointerdown', ev => {
+              // امنع مستمع الصفحة فقط؛ لا تمنع السلوك الافتراضي الذي يضع مؤشر الكتابة.
               ev.stopPropagation();
               document.querySelectorAll('.note-item.on').forEach(x => x.classList.remove('on'));
               d.classList.add('on');
+            });
+            e.addEventListener('click', ev => {
+              ev.stopPropagation();
               if (document.activeElement !== e) e.focus({preventScroll:true});
-            };
-            e.onclick = ev => {
+            });
+            e.addEventListener('dblclick', ev => {
               ev.stopPropagation();
               e.focus({preventScroll:true});
-            };
+            });
             e.onfocus = () => {
               document.querySelectorAll('.note-item.on').forEach(x => x.classList.remove('on'));
               d.classList.add('on')
