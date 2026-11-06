@@ -79,7 +79,7 @@ header{height:auto;flex-direction:column;align-items:stretch;gap:0;padding:0}
 button.big{height:64px;min-width:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;line-height:1.1;padding:4px 6px;white-space:nowrap}
 button.big i{font-style:normal;font-size:22px;line-height:1}
 button.big.on{background:#0ea5e933;color:#38bdf8;box-shadow:inset 0 0 0 1px #0ea5e988}
-#props{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:4px 10px;background:#16213a;position:static;transform:none;max-width:none}
+#props{display:none;position:fixed;z-index:70;left:50%;bottom:12px;transform:translateX(-50%);flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:8px 10px;background:#16213af2;border:1px solid #ffffff24;border-radius:16px;box-shadow:0 12px 35px #0009;max-width:calc(100vw - 20px);max-height:30vh;overflow:auto}#props.visible{display:flex}
 header.col #strip,header.col #props{display:none}
 .mini{min-width:0;height:30px;font-size:12px;padding:0 8px;background:#ffffff12}
 #props input[type=number]{width:64px;padding:4px 6px}#ds{width:auto;padding:4px 6px}
@@ -131,13 +131,14 @@ header.col #strip,header.col #props{display:none}
 <div class="gp"><button class="big" id="bOpen" title="فتح ملف مشروع أو إعدادات (JSON) من جهازك"><i>🗂</i>فتح</button><button class="big" id="bSave" title="حفظ المشروع بصيغة قابلة للتعديل (.inknb.json)"><i>💾</i>حفظ</button><button class="big pri" id="bExp" title="تصدير PDF"><i>⬇</i>PDF</button><button class="big" id="bApp" title="إعدادات التطبيق"><i>🛠</i>إعدادات</button></div>
 </div>
 </div>
+
+</header>
 <div id="props">
 <span id="cols"></span><span id="favc"></span><button id="favAdd" class="mini" title="حفظ اللون الحالي في المفضلة">★＋</button><input type="color" id="cc" value="#111111" title="لون حر">
 <label>السمك <input type="range" id="sw" min="1" max="40" value="3"><input type="number" id="swv" min=".5" max="60" step=".5" value="3"></label><span id="favs"></span><button id="favSAdd" class="mini" title="حفظ المقاس (السمك) الحالي">📏＋</button>
-<span id="shp" hidden></span><span id="fil" hidden><button id="fm" title="مفرغ أو مصمت">مفرغ</button><label>تعبئة <input type="color" id="fc" value="#ef4444"></label><label>الحد <select id="ds"><option value="solid">متصل</option><option value="dash">متقطع</option><option value="dot">منقط</option></select></label></span>
+<span id="shp" hidden></span><span id="fil" hidden><button id="fm" title="مفرغ أو مصمت">مفرغ</button><label>تعبئة <input type="color" id="fc" value="#ef4444"></label><label>الحد <select id="lineDs"><option value="solid">متصل</option><option value="dash">متقطع</option><option value="dot">منقط</option></select></label></span>
 <label><input type="checkbox" id="fing">اللمس يرسم</label>
 </div>
-</header>
 <div id="main">
 <aside id="side"><div class="sh"><b>الملفات</b><span><button id="nF" title="مجلد جديد">📁＋</button><button id="nN" title="كراسة جديدة">📓＋</button><button id="nP" title="استيراد PDF">📥</button><button id="nO" title="فتح ملف مشروع (.json)">🗂</button></span></div>
 <div id="tree"></div><div class="sf"><span>💾 مخزن محلياً (IndexedDB)</span><span id="sv" style="color:#34d399">محفوظ</span></div>
@@ -328,7 +329,7 @@ addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('input,sele
  if(mod&&e.code==='KeyZ'){e.preventDefault();e.shiftKey?redo():undo()}else if(mod&&e.code==='KeyY'){e.preventDefault();redo()}
  else if(mod&&e.code==='KeyC'&&selItems()){e.preventDefault();copySel()}else if(mod&&e.code==='KeyX'&&selItems()){e.preventDefault();copySel(1)}
  else if((e.key==='Delete'||e.key==='Backspace')&&delSel())e.preventDefault()});
-function tb(){$('sbar').hidden=!(selItems()||S.clip);$('shp').hidden=S.tool!=='shape';$('fil').hidden=!(S.tool==='shape'||S.selS||S.grp)}
+function tb(){$('sbar').hidden=!(selItems()||S.clip);$('shp').hidden=S.tool!=='shape';$('fil').hidden=!(S.tool==='shape'||S.selS||S.grp);$('props').classList.toggle('visible',!!S.selS||!!S.grp||['pen','highlighter','shape'].includes(S.tool))}
 function showSel(el,p){tb();const o=el.lastChild;o.innerHTML='';if(S.grp&&S.grp.p===p)return showGrp(o,S.grp);const k=S.selS;if(!k||S.selP!==p||!p.strokes.includes(k))return;
  const a=k.a,b=k.b,line=k.sh==='line'||k.sh==='arrow'||k.sh==='dbl',x1=Math.min(a.x,b.x),y1=Math.min(a.y,b.y),x2=Math.max(a.x,b.x),y2=Math.max(a.y,b.y);
  const add=(h,x,y,t)=>{const i=document.createElement('i');i.dataset.h=h;i.className='hp';i.style.cssText=`left:${x}px;top:${y}px;transform:scale(${1/S.z})`;if(t)i.textContent=t;o.appendChild(i)};
@@ -338,7 +339,7 @@ function showSel(el,p){tb();const o=el.lastChild;o.innerHTML='';if(S.grp&&S.grp.
 function pickShape(el,e){const p=pg(el.dataset.id),pt=xy(e,el),t=(e.pointerType==='touch'?18:10)/S.z;
  for(let i=p.strokes.length-1;i>=0;i--){const k=p.strokes[i];if(!k.sh)continue;
   if(hit(k.pts,pt,t+k.w/2)||(k.fill&&pt.x>=Math.min(k.a.x,k.b.x)&&pt.x<=Math.max(k.a.x,k.b.x)&&pt.y>=Math.min(k.a.y,k.b.y)&&pt.y<=Math.max(k.a.y,k.b.y)))return k}return null}
-function syncUI(k){S.color=k.c;S.w=k.w;$('cc').value=k.c;$('sw').value=k.w;$('swv').value=k.w;S.solid=!!k.fill;if(k.fill){S.fill=k.fill;$('fc').value=k.fill}$('fm').textContent=S.solid?'مصمت':'مفرغ';$('fm').classList.toggle('on',S.solid);$('ds').value=k.ds||'solid'}
+function syncUI(k){S.color=k.c;S.w=k.w;$('cc').value=k.c;$('sw').value=k.w;$('swv').value=k.w;S.solid=!!k.fill;if(k.fill){S.fill=k.fill;$('fc').value=k.fill}$('fm').textContent=S.solid?'مصمت':'مفرغ';$('fm').classList.toggle('on',S.solid);$('lineDs').value=k.ds||'solid'}
 function startEdit(e,h){const p=S.selP,el=elOf(p.id),i=p.strokes.indexOf(S.selS);if(i<0)return;pushU(p);
  if(h==='del'){p.strokes.splice(i,1);S.selS=null;repaint(el,p);showSel(el,p);save(p);return}
  const k=S.selS={...S.selS,a:{...S.selS.a},b:{...S.selS.b}};p.strokes[i]=k;vp.setPointerCapture(e.pointerId);
@@ -462,7 +463,7 @@ vp.onpointermove=e=>{
 vp.onpointerup=vp.onpointercancel=e=>{
  tp.delete(e.pointerId);
  const oo=ptr.get(e.pointerId);if(ptr.delete(e.pointerId)){clearTimeout(lp);gest=null;if(oo&&ptr.size===0&&performance.now()-(oo.t||0)<90&&(Math.abs(oo.vx||0)>.05||Math.abs(oo.vy||0)>.05))inertia(oo.vx||0,oo.vy||0);return}
- const d=drawing;if(!d||d.id!==e.pointerId)return;if(d.tool==='shedit'||d.tool==='grp'){drawing=null;if(d.ch)save(d.p);else{S.U.pop();if(d.tool==='shedit')shapePropsFly(null,{x:e.clientX,y:e.clientY})}return}
+ const d=drawing;if(!d||d.id!==e.pointerId)return;if(d.tool==='shedit'||d.tool==='grp'){drawing=null;if(d.ch)save(d.p);else{S.U.pop();tb()}return}
  if(d.tool==='snap'){drawing=null;d.box.remove();snapDone(d,e);return}
  if(d.tool==='lasso'){drawing=null;live=null;lassoDone(d);return}
  drawing=null;live=null;
@@ -473,12 +474,12 @@ vp.onpointerup=vp.onpointercancel=e=>{
 /* ---------- tools UI ---------- */
 function setTool(t){if(typeof fly!=='undefined')fly.hidden=true;S.tool=t;document.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));if(t!=='select'&&t!=='shape'&&S.selS){const p=S.selP;S.selS=S.selP=null;const o=elOf(p.id);if(o)showSel(o,p)}if(t==='highlighter'&&lum(S.color)<.45){S.color='#facc15';$('cc').value=S.color}if(t!=='lasso')clrGrp();tb();document.body.classList.toggle('sel',t==='select');document.body.classList.toggle('las',t==='lasso');document.body.classList.toggle('txm',t==='select'||t==='text'||t==='callout');document.body.classList.toggle('shs',t==='select'||t==='shape'||t==='lasso');
  vp.style.cursor=t==='select'?'default':t==='text'||t==='callout'?'text':DOT}
-document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{const t=b.dataset.t,was=S.tool===t;setTool(t);if(b.dataset.fly&&FL[t]&&(was||t==='shape'))FL[t](b)});
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{const t=b.dataset.t,was=S.tool===t;if(!was)fly.hidden=true;setTool(t);if(b.dataset.fly&&FL[t]&&was)FL[t](b)});
 document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{S.shape=b.dataset.s;document.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b))});
 ['#111111','#2563eb','#ef4444','#10b981','#f59e0b','#ffffff'].forEach((c,i)=>{const b=document.createElement('button');b.className='dot'+(i?'':' on');b.style.background=c;b.dataset.c=c;
  b.onclick=()=>{S.color=c;$('cc').value=c;upd({c});document.querySelectorAll('#cols .dot').forEach(x=>x.classList.toggle('on',x===b))};$('cols').appendChild(b)});
 $('cc').oninput=e=>setColor(e.target.value);
-$('fm').onclick=()=>{S.solid=!S.solid;$('fm').textContent=S.solid?'مصمت':'مفرغ';$('fm').classList.toggle('on',S.solid);upd({fill:S.solid?S.fill:null})};$('fc').oninput=e=>{S.fill=e.target.value;if(S.solid)upd({fill:S.fill})};
+$('fm').onclick=()=>{S.solid=!S.solid;$('fm').textContent=S.solid?'مصمت':'مفرغ';$('fm').classList.toggle('on',S.solid);upd({fill:S.solid?S.fill:null});storeCfg()};$('fc').oninput=e=>{S.fill=e.target.value;if(!S.solid){S.solid=true;$('fm').textContent='مصمت';$('fm').classList.add('on')}upd({fill:S.fill});storeCfg()};
 $('sw').oninput=e=>setW(+e.target.value);$('fing').onchange=e=>S.finger=e.target.checked;
 $('bApp').onclick=()=>{$('ce').checked=S.confirmExit;$('hw').value=S.hw;$('da').showModal()};$('hw').onchange=e=>{S.hw=e.target.value;storeCfg()};$('dax').onclick=()=>{storeCfg();$('da').close()};
 $('bSide').onclick=()=>$('side').classList.toggle('hid');
@@ -523,7 +524,7 @@ $('bDir').onclick=async()=>{if(window.__TAURI__||(window.chrome&&window.chrome.w
  try{const h=await showDirectoryPicker({mode:'readwrite'});await db.pdfs.put({id:'dirHandle',h});bk('المجلد: '+h.name);doAuto()}catch(e){bk(e&&e.name==='AbortError'?'أُلغي':'غير مدعوم هنا: استخدم كروم/إيدج أو نسخة Tauri',1)}};
 const cfgOut=()=>JSON.stringify({app:'inknb-settings',v:1,hw:S.hw,color:S.color,w:S.w,finger:S.finger,shape:S.shape,solid:S.solid,fill:S.fill,pressure:S.pressure,straight:S.straight,ds:S.ds,favC:S.favC||[],favS:S.favS||[]},null,1);
 const storeCfg=()=>{try{localStorage.cfg=cfgOut()}catch{}};
-function applyCfg(){$('cc').value=S.color;$('sw').value=S.w;$('swv').value=S.w;$('fing').checked=!!S.finger;$('hw').value=S.hw;$('fc').value=S.fill;$('fm').textContent=S.solid?'مصمت':'مفرغ';$('ds').value=S.ds||'solid';renderFav()}
+function applyCfg(){$('cc').value=S.color;$('sw').value=S.w;$('swv').value=S.w;$('fing').checked=!!S.finger;$('hw').value=S.hw;$('fc').value=S.fill;$('fm').textContent=S.solid?'مصمت':'مفرغ';$('lineDs').value=S.ds||'solid';renderFav()}
 function loadCfg(txt){const j=JSON.parse(txt);if(j.app!=='inknb-settings')throw 0;Object.assign(S,{hw:j.hw||S.hw,color:j.color||S.color,w:j.w||S.w,finger:!!j.finger,shape:j.shape||S.shape,solid:!!j.solid,fill:j.fill||S.fill,pressure:j.pressure!==false,straight:!!j.straight,ds:j.ds||'solid',favC:j.favC||[],favS:j.favS||[]});applyCfg()}
 $('cOut').onclick=()=>saveFile('notebook-settings.json',new Blob([cfgOut()],{type:'application/json'}));
 $('cIn').onclick=()=>$('fcfg').click();
@@ -623,7 +624,7 @@ function colorRow(list){const w=mk('div','clrow');[...list,...(S.favC||[])].forE
 function penFly(b){showFly(b,[{node:sizeRow()},{node:sliderRow()},{sep:1},{chk:'حساسية الضغط',get:()=>S.pressure!==false,set:v=>{S.pressure=v;storeCfg()}},{chk:'تقويم الخط عند التوقف (اضغط مطولاً)',get:()=>!!S.straight,set:v=>{S.straight=v;storeCfg()}},{sep:1},{node:colorRow(PAL)},{t:'حفظ المقاس الحالي',ic:'📏',do:addFavS,keep:1}])}
 function hlFly(b){showFly(b,[{node:colorRow(HLP)},{sep:1},{node:sliderRow()},{node:sizeRow()}])}
 function pickShape(k){S.shape=k;setTool('shape')}
-function setDs(v){S.ds=v;$('ds').value=v;upd({ds:v});storeCfg()}
+function setDs(v){S.ds=v;$('lineDs').value=v;upd({ds:v});storeCfg()}
 function setSolid(v){S.solid=v;$('fm').textContent=v?'مصمت':'مفرغ';$('fm').classList.toggle('on',v);upd({fill:v?S.fill:null});storeCfg()}
 function setFill(c){S.fill=c;$('fc').value=c;if(S.solid)upd({fill:c});storeCfg()}
 function shapePropsFly(anchor,pt){const fill=mk('div','clrow');[...PAL,'#facc15','#a78bfa',...(S.favC||[])].forEach(c=>{const d=mk('button','dot');d.style.background=c;d.title=c;d.onclick=()=>{setFill(c);setSolid(true)};fill.appendChild(d)});const picker=mk('input');picker.type='color';picker.value=S.fill;picker.title='لون التعبئة';picker.oninput=()=>{setFill(picker.value);setSolid(true)};fill.appendChild(picker);showFly(anchor||$('props'),[{t:'لون الحد',ic:'🎨',sub:[{node:colorRow(PAL)}]},{t:'سُمك الحد',ic:'↔',sub:[{node:sizeRow()},{node:sliderRow()},{t:'حفظ السُمك الحالي',ic:'📏',do:addFavS,keep:1}]},{t:'نمط الحد',ic:'━',sub:[{t:'متصل',do:()=>setDs('solid'),keep:1},{t:'متقطع',do:()=>setDs('dash'),keep:1},{t:'منقط',do:()=>setDs('dot'),keep:1}]},{sep:1},{chk:'تعبئة الشكل',get:()=>S.solid,set:setSolid},{t:'لون التعبئة',ic:'🪣',sub:[{node:fill}]},{t:'حفظ اللون الحالي',ic:'★',do:addFavC,keep:1}],pt)}
@@ -642,7 +643,7 @@ function addFavC(){S.favC=S.favC||[];if(!S.favC.includes(S.color)){S.favC.push(S
 function addFavS(){S.favS=S.favS||[];const v=+(+S.w).toFixed(1);if(!S.favS.includes(v)){S.favS.push(v);storeCfg();renderFav()}sv('تم حفظ المقاس')}
 $('favAdd').onclick=addFavC;$('favSAdd').onclick=addFavS;
 $('swv').oninput=e=>{const v=Math.max(.5,Math.min(60,+e.target.value||1));S.w=v;$('sw').value=Math.min(40,v);upd({w:v});storeCfg()};
-$('ds').onchange=e=>{S.ds=e.target.value;upd({ds:S.ds});storeCfg()};
+$('lineDs').onchange=e=>{S.ds=e.target.value;upd({ds:S.ds});storeCfg()};
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{const hd=document.querySelector('header');if(b.classList.contains('on')){hd.classList.toggle('col');return}hd.classList.remove('col');document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.pn').forEach(x=>x.classList.toggle('on',x.dataset.p===b.dataset.tab))});
 const fitW=()=>{const p=S.pages[0];if(p)setZ(Math.min(3,(vp.clientWidth-56)/p.w))};
 $('bFit').onclick=$('bFit2').onclick=fitW;$('bZ1').onclick=()=>setZ(1);$('bSide2').onclick=()=>$('side').classList.toggle('hid');
