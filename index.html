@@ -2061,6 +2061,7 @@
           pushU(p);
           p.strokes = p.strokes.filter(k => !g.ks.includes(k));
           p.imgs = p.imgs.filter(m => !g.ims.includes(m));
+          if (g.txts && g.txts.length) p.txts = (p.txts || []).filter(t => !g.txts.includes(t));
           S.grp = null;
           const el = elOf(p.id);
           repaint(el, p);
@@ -2089,6 +2090,10 @@
             ad(m.x, m.y);
             ad(m.x + m.w, m.y + m.h)
           });
+          (g.txts || []).forEach(t => {
+            ad(t.x, t.y);
+            ad(t.x + t.w, t.y + (t.hh || 40))
+          });
           return {
             x1,
             y1,
@@ -2098,6 +2103,8 @@
         }
 
         function showGrp(o, g) {
+          const pgEl = o.parentElement;
+          if (pgEl) pgEl.querySelectorAll('.note-item').forEach((n, i) => n.classList.toggle('on', !!(g.txts && g.txts.includes((g.p.txts || [])[i]))));
           const b = grpBox(g),
             bx = document.createElement('div');
           bx.className = 'sb';
@@ -2165,6 +2172,13 @@
                 y: m.y,
                 w: m.w,
                 h: m.h
+              })),
+              txts: (g.txts || []).map(t => ({
+                x: t.x,
+                y: t.y,
+                w: t.w,
+                ax: t.ax,
+                ay: t.ay
               }))
             }
           }
@@ -2243,17 +2257,11 @@
             const ims = (p.imgs || []).slice();
             const txts = (p.txts || []).slice();
             if (ks.length || ims.length || txts.length) {
-              S.grp = {p, ks, ims, txts};
               clrGrp();
+              S.grp = {p, ks, ims, txts};
+              if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+              getSelection().removeAllRanges();
               showSel(elOf(p.id), p);
-              txts.forEach(t => {
-                const node = elOf(p.id)?.querySelectorAll('.note-item');
-                if (!node) return;
-                node.forEach(n => {
-                  const ed = n.querySelector('.note-editor');
-                  if (ed && ed.textContent === (t.t || '')) n.classList.add('on');
-                });
-              });
               tb();
               sv('تم تحديد جميع العناصر');
             } else {
@@ -2836,6 +2844,8 @@
             return;
           }
           if (e.target.closest && e.target.closest('.note-item')) return;
+          // النقر خارج النص ينهي التحرير حتى لا يبقى المؤشر داخله ويستحوذ على Ctrl+A
+          if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.note-editor')) document.activeElement.blur();
 
           // أول نقرة خارج النص بعد إنشائه تنهي التحرير فقط،
           // ولا تلتقط شكلاً موجوداً تحت مؤشر الفأرة.
@@ -3111,6 +3121,24 @@
               const n = q(d.el, 'il').children[d.p.imgs.indexOf(m)];
               if (n) place(n, m)
             });
+            const nodes = d.el.querySelectorAll('.note-item');
+            (d.g.txts || []).forEach((t, i) => {
+              const o = d.o.txts && d.o.txts[i];
+              if (!o) return;
+              t.x = b.x1 + (o.x - b.x1) * f + dx;
+              t.y = b.y1 + (o.y - b.y1) * f + dy;
+              t.w = o.w * f;
+              if (o.ax != null) {
+                t.ax = b.x1 + (o.ax - b.x1) * f + dx;
+                t.ay = b.y1 + (o.ay - b.y1) * f + dy
+              }
+              const n = nodes[(d.p.txts || []).indexOf(t)];
+              if (n) {
+                n.style.left = t.x + 'px';
+                n.style.top = t.y + 'px';
+                n.style.width = t.w + 'px'
+              }
+            });
             sched(d.p);
             showSel(d.el, d.p);
             return
@@ -3189,6 +3217,7 @@
           if (!d || d.id !== e.pointerId) return;
           if (d.tool === 'shedit' || d.tool === 'grp') {
             drawing = null;
+            if (d.ch && d.tool === 'grp' && d.g.txts && d.g.txts.length) renderImgs(d.el, d.p);
             if (d.ch) save(d.p);
             else {
               S.U.pop();
@@ -3665,6 +3694,7 @@
           if (S.grp) return {
             ks: S.grp.ks,
             ims: S.grp.ims,
+            txts: S.grp.txts || [],
             p: S.grp.p
           };
           if (S.selS) return {
@@ -3703,6 +3733,9 @@
             ims: s.ims.map(m => ({
               ...m
             })),
+            txts: (s.txts || []).map(t => ({
+              ...t
+            })),
             n: 0
           };
           sv('تم النسخ');
@@ -3716,7 +3749,8 @@
           const c = S.clip,
             b = grpBox({
               ks: c.ks,
-              ims: c.ims
+              ims: c.ims,
+              txts: c.txts || []
             });
           let dx, dy;
           c.n++;
@@ -3741,8 +3775,22 @@
               x: m.x + dx,
               y: m.y + dy
             }));
+          const txts = (c.txts || []).map(t => {
+            const n = {
+              ...t,
+              id: uid('x'),
+              x: t.x + dx,
+              y: t.y + dy
+            };
+            if (t.ax != null) {
+              n.ax = t.ax + dx;
+              n.ay = t.ay + dy
+            }
+            return n
+          });
           p.strokes.push(...ks);
           p.imgs.push(...ims);
+          (p.txts = p.txts || []).push(...txts);
           const el = elOf(p.id);
           repaint(el, p);
           renderImgs(el, p);
@@ -3750,7 +3798,8 @@
           S.grp = {
             p,
             ks,
-            ims
+            ims,
+            txts
           };
           showSel(el, p);
           save(p)
@@ -4748,6 +4797,7 @@
             e.style.cssText = 'font-size:' + t.s + 'px;color:' + t.c + ';' + (t.k === 'callout' ? 'background:' + t.bg + ';border:2px solid ' + t.bd + ';border-radius:12px;padding:8px 10px' : 'padding:2px 4px');
             d.appendChild(e);
             const upT = () => {
+              if (d.offsetHeight) t.hh = d.offsetHeight;
               if (sv) sv.innerHTML = tailHtml(t, d.offsetHeight || 60)
             };
             e.oninput = () => {
