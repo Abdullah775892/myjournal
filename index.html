@@ -1175,6 +1175,7 @@
           z: 1,
           sel: null,
           skipNextSelect: false,
+          textModeLock: false,
           open: new Set(),
           fol: null,
           finger: false,
@@ -2805,6 +2806,13 @@
             return;
           }
 
+          // بعد إضافة نص، لا تلتقط النقرات على الصفحة أشكالاً بالخطأ.
+          // ينتهي هذا القفل فقط عندما يختار المستخدم أداة من الشريط صراحةً.
+          if (S.textModeLock) {
+            document.querySelectorAll('.note-item.on').forEach(x => x.classList.remove('on'));
+            return;
+          }
+
           document.querySelectorAll('.note-item.on').forEach(x => x.classList.remove('on'));
           if (e.pointerType === 'pen') S.penAt = Date.now();
           else if (e.pointerType === 'touch' && Date.now() - S.penAt < 1200) return; /* palm rejection */
@@ -3203,6 +3211,7 @@
           vp.style.cursor = t === 'select' ? 'default' : t === 'text' || t === 'callout' ? 'text' : DOT
         }
         document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+          S.textModeLock = false;
           const t = b.dataset.t,
             was = S.tool === t;
           if (!was) fly.hidden = true;
@@ -4706,7 +4715,6 @@
             e.onpointerdown = ev => {
               ev.stopPropagation();
               ev.stopImmediatePropagation();
-              if (S.tool !== 'select') setTool('select');
               document.querySelectorAll('.note-item.on').forEach(x => x.classList.remove('on'));
               d.classList.add('on');
             };
@@ -4795,6 +4803,7 @@
           save(p);
           setTool('select');
           S.skipNextSelect = true;
+          S.textModeLock = true;
           setTimeout(() => {
             const es = el.querySelectorAll('.note-item .note-editor'),
               l = es[es.length - 1];
