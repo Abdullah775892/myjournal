@@ -276,7 +276,8 @@
         left: 0;
         top: 0;
         width: 100%;
-        height: 100%
+        height: 100%;
+        pointer-events: none
       }
 
       .ink {
@@ -4352,7 +4353,7 @@
           }])
         }
 
-        function pickShape(k) {
+        function chooseShape(k) {
           S.shape = k;
           setTool('shape')
         }
@@ -4480,23 +4481,23 @@
             }, {
               t: 'خط',
               ic: '／',
-              do: () => pickShape('line')
+              do: () => chooseShape('line')
             }, {
               t: 'سهم',
               ic: '→',
-              do: () => pickShape('arrow')
+              do: () => chooseShape('arrow')
             }, {
               t: 'سهم مزدوج',
               ic: '↔',
-              do: () => pickShape('dbl')
+              do: () => chooseShape('dbl')
             }, {
               t: 'مستطيل',
               ic: '▭',
-              do: () => pickShape('rect')
+              do: () => chooseShape('rect')
             }, {
               t: 'دائرة / بيضاوي',
               ic: '◯',
-              do: () => pickShape('ell')
+              do: () => chooseShape('ell')
             }, {
               sep: 1
             },
