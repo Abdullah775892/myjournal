@@ -96,7 +96,7 @@ header.col #strip,header.col #props{display:none}
 .snapbox{position:absolute;border:2px dashed var(--ac);background:#0ea5e922;pointer-events:none;z-index:6}
 #pages{padding-top:28px}
 
-.note-item{position:absolute;pointer-events:none;touch-action:none}body.note-mode .note-item{pointer-events:auto}
+.note-item{position:absolute;pointer-events:auto;touch-action:none}.note-editor{pointer-events:auto}
 .note-editor{outline:none;min-height:1.4em;line-height:1.45;white-space:pre-wrap;word-break:break-word;cursor:text;user-select:text;-webkit-user-select:text}
 .note-item.on .note-editor{outline:2px dashed var(--ac);outline-offset:3px}
 .note-item i{display:none;position:absolute;width:26px;height:26px;border-radius:50%;background:var(--ac);color:#fff;text-align:center;line-height:26px;font-style:normal;font-size:12px;cursor:pointer;z-index:3}
@@ -117,7 +117,7 @@ header.col #strip,header.col #props{display:none}
 <div class="pn" data-p="ann">
 <div class="gp"><button class="big" data-t="pen" data-fly="1" title="قلم — اضغط مرة ثانية لخياراته"><i>✒️</i>قلم ▾</button><button class="big" data-t="highlighter" data-fly="1" title="مظلل — اضغط مرة ثانية لخياراته"><i>🖍️</i>مظلل ▾</button></div>
 <div class="gp"><button class="big" data-t="eraser" title="ممحاة: تمسح النقطة فقط"><i>🧽</i>ممحاة نقطة</button><button class="big" data-t="eraserL" title="ممحاة: تمسح الخط كاملاً"><i>✂️</i>ممحاة خط</button></div>
-<div class="gp"><button class="big" data-t="shape" data-fly="1" title="الأشكال وخصائصها"><i>📐</i>أشكال ▾</button></div><div class="gp text-tools-group"><button id="textToolBtn" class="big text-tool-btn" data-t="text" data-fly="1" title="نص — اضغط على الصفحة لإضافته"><i>🔤</i>نص ▾</button><button id="calloutToolBtn" class="big text-tool-btn" data-t="callout" data-fly="1" title="فقاعة (Callout) بسهم يشير لنقطة"><i>💬</i>فقاعة ▾</button></div>
+<div class="gp shape-tools-group"><button class="big" data-t="shape" data-fly="1" title="الأشكال وخصائصها"><i>📐</i>أشكال ▾</button></div><div class="gp text-tools-group" aria-label="أدوات الكتابة"><button id="textToolBtn" class="big text-tool-btn" data-t="text" title="نص — اضغط على الصفحة لإضافته مباشرة"><i>🔤</i>نص</button><button id="textOptionsBtn" class="big text-tool-btn" title="إعدادات النص"><i>⚙️</i>إعدادات النص</button><button id="calloutToolBtn" class="big text-tool-btn" data-t="callout" title="فقاعة — اضغط على الصفحة لإضافتها"><i>💬</i>فقاعة</button></div>
 <div class="gp"><button class="big" data-t="pin" title="دبوس: تسجيل صوتي / صورة / PDF / ملاحظة"><i>📌</i>دبوس</button><button class="big" id="bImg" title="إدراج صورة"><i>🖼️</i>صورة</button></div>
 </div>
 <div class="pn" data-p="page">
@@ -411,7 +411,7 @@ function erase(d,pt){const r=Math.max(8,S.w*2),o=[];let ch=0;
  if(ch){if(!d.pushed){pushU(d.p);d.pushed=1}d.p.strokes=o;d.dirty=1;sched(d.p)}}
 const shp=(t,a,b)=>t==='rect'?[a,{x:b.x,y:a.y},b,{x:a.x,y:b.y},a]:t==='ell'?Array.from({length:61},(_,i)=>{const th=i/60*6.2832;return{x:(a.x+b.x)/2+Math.cos(th)*(b.x-a.x)/2,y:(a.y+b.y)/2+Math.sin(th)*(b.y-a.y)/2}}):[a,b];
 vp.onpointerdown=e=>{
- cancelAnimationFrame(S.inr);if(e.target.closest&&e.target.closest('.note-item'))return;document.querySelectorAll('.note-item.on').forEach(x=>x.classList.remove('on'));
+ cancelAnimationFrame(S.inr);if(e.target.closest&&e.target.closest('.note-editor'))return;if(e.target.closest&&e.target.closest('.note-item'))return;document.querySelectorAll('.note-item.on').forEach(x=>x.classList.remove('on'));
  if(e.pointerType==='pen')S.penAt=Date.now();
  else if(e.pointerType==='touch'&&Date.now()-S.penAt<1200)return; /* palm rejection */
  if(e.pointerType==='mouse'&&e.button!==0)return;
@@ -633,13 +633,14 @@ function setSolid(v){S.solid=v;$('fm').textContent=v?'مصمت':'مفرغ';$('fm
 function setFill(c){S.fill=c;$('fc').value=c;if(S.solid)upd({fill:c});storeCfg()}
 function shapePropsFly(anchor,pt){const fill=mk('div','clrow');[...PAL,'#facc15','#a78bfa',...(S.favC||[])].forEach(c=>{const d=mk('button','dot');d.style.background=c;d.title=c;d.onclick=()=>{setFill(c);setSolid(true)};fill.appendChild(d)});const picker=mk('input');picker.type='color';picker.value=S.fill;picker.title='لون التعبئة';picker.oninput=()=>{setFill(picker.value);setSolid(true)};fill.appendChild(picker);showFly(anchor||$('props'),[{t:'لون الحد',ic:'🎨',sub:[{node:colorRow(PAL)}]},{t:'سُمك الحد',ic:'↔',sub:[{node:sizeRow()},{node:sliderRow()},{t:'حفظ السُمك الحالي',ic:'📏',do:addFavS,keep:1}]},{t:'نمط الحد',ic:'━',sub:[{t:'متصل',do:()=>setDs('solid'),keep:1},{t:'متقطع',do:()=>setDs('dash'),keep:1},{t:'منقط',do:()=>setDs('dot'),keep:1}]},{sep:1},{chk:'تعبئة الشكل',get:()=>S.solid,set:setSolid},{t:'لون التعبئة',ic:'🪣',sub:[{node:fill}]},{t:'حفظ اللون الحالي',ic:'★',do:addFavC,keep:1}],pt)}
 function shapeFly(b){const fr=mk('div','clrow');[...PAL,'#facc15','#a78bfa'].forEach(c=>{const d=mk('button','dot');d.style.background=c;d.onclick=()=>{setFill(c);setSolid(true)};fr.appendChild(d)});
- showFly(b,[{t:'خط',ic:'／',do:()=>pickShape('line')},{t:'سهم',ic:'→',do:()=>pickShape('arrow')},{t:'سهم مزدوج',ic:'↔',do:()=>pickShape('dbl')},{t:'مستطيل',ic:'▭',do:()=>pickShape('rect')},{t:'دائرة / بيضاوي',ic:'◯',do:()=>pickShape('ell')},{sep:1},
+ showFly(b,[{t:'خيار فاضي',ic:'○',do:()=>{},keep:1},{t:'خط',ic:'／',do:()=>pickShape('line')},{t:'سهم',ic:'→',do:()=>pickShape('arrow')},{t:'سهم مزدوج',ic:'↔',do:()=>pickShape('dbl')},{t:'مستطيل',ic:'▭',do:()=>pickShape('rect')},{t:'دائرة / بيضاوي',ic:'◯',do:()=>pickShape('ell')},{sep:1},
   {t:'الحدود',ic:'🖊',sub:[{node:sizeRow()},{t:'متصل',ic:'━',do:()=>setDs('solid'),keep:1},{t:'متقطع',ic:'╍',do:()=>setDs('dash'),keep:1},{t:'منقط',ic:'┈',do:()=>setDs('dot'),keep:1},{node:colorRow(PAL)}]},
   {t:'التعبئة',ic:'🪣',sub:[{chk:'تعبئة الأشكال',get:()=>S.solid,set:setSolid},{node:fr},{t:'بدون تعبئة',ic:'∅',do:()=>setSolid(false)}]}])}
 function textFly(b){const sz=[14,18,22,28,36,48].map(v=>({t:v+' px',do:()=>{S.ts=v;storeCfg()},keep:0}));
  const bg=[['#fff8c5','أصفر'],['#ffffff','أبيض'],['#dcfce7','أخضر'],['#dbeafe','أزرق'],['#fee2e2','وردي']].map(([c,n])=>({t:n,ic:'■',do:()=>{S.tbg=c;storeCfg()}}));
  showFly(b,[{t:'حجم الخط ('+(S.ts||22)+'px)',ic:'🔠',sub:sz},{t:'لون خلفية الفقاعة',ic:'🎨',sub:bg},{sep:1},{node:colorRow(PAL)}])}
-const FL={pen:penFly,highlighter:hlFly,shape:shapeFly,text:textFly,callout:textFly};
+const FL={pen:penFly,highlighter:hlFly,shape:shapeFly};
+$('textOptionsBtn').onclick=()=>textFly($('textOptionsBtn'));
 function renderFav(){S.favC=S.favC||[];S.favS=S.favS||[];const fc=$('favc');fc.innerHTML='';
  S.favC.forEach((c,i)=>{const b=mk('button','dot');b.style.background=c;b.title='لون محفوظ — كليك يمين/ضغط مطول للحذف';b.onclick=()=>setColor(c);b.oncontextmenu=e=>{e.preventDefault();S.favC.splice(i,1);storeCfg();renderFav()};fc.appendChild(b)});
  const fs=$('favs');fs.innerHTML='';S.favS.forEach((v,i)=>{const b=mk('button','chip',v+'px');b.title='مقاس محفوظ — كليك يمين/ضغط مطول للحذف';b.onclick=()=>setW(v);b.oncontextmenu=e=>{e.preventDefault();S.favS.splice(i,1);storeCfg();renderFav()};fs.appendChild(b)})}
@@ -661,11 +662,11 @@ const tailHtml=(t,H)=>'<polygon points="'+tailPts(t,H).map(p=>p.join(',')).join(
 function renderTxts(L,p){(p.txts||[]).forEach(t=>{
  let sv=null;if(t.k==='callout'){sv=document.createElementNS('http://www.w3.org/2000/svg','svg');sv.setAttribute('class','ct');sv.innerHTML=tailHtml(t,60);L.appendChild(sv)}
  const d=mk('div','note-item'),e=mk('div','note-editor');d.style.cssText='left:'+t.x+'px;top:'+t.y+'px;width:'+t.w+'px';
- e.contentEditable='true';e.dir='auto';e.textContent=t.t||'';e.style.cssText='font-size:'+t.s+'px;color:'+t.c+';'+(t.k==='callout'?'background:'+t.bg+';border:2px solid '+t.bd+';border-radius:12px;padding:8px 10px':'padding:2px 4px');
+ e.contentEditable='true';e.tabIndex=0;e.setAttribute('role','textbox');e.setAttribute('aria-multiline','true');e.dir='auto';e.textContent=t.t||'';e.style.cssText='font-size:'+t.s+'px;color:'+t.c+';'+(t.k==='callout'?'background:'+t.bg+';border:2px solid '+t.bd+';border-radius:12px;padding:8px 10px':'padding:2px 4px');
  d.appendChild(e);
  const upT=()=>{if(sv)sv.innerHTML=tailHtml(t,d.offsetHeight||60)};
  e.oninput=()=>{t.t=e.innerText.replace(/\n$/,'');upT();clearTimeout(S.tt);S.tt=setTimeout(()=>save(p),500)};
- e.onpointerdown=ev=>{ev.stopPropagation();if(S.tool!=='select')setTool('select');document.querySelectorAll('.note-item.on').forEach(x=>x.classList.remove('on'));d.classList.add('on')};
+ e.onpointerdown=ev=>{ev.stopPropagation();ev.stopImmediatePropagation();if(S.tool!=='select')setTool('select');document.querySelectorAll('.note-item.on').forEach(x=>x.classList.remove('on'));d.classList.add('on');};
  e.onfocus=()=>{document.querySelectorAll('.note-item.on').forEach(x=>x.classList.remove('on'));d.classList.add('on')};
  [['th','mv','✥'],['tr','rs','⇲'],['tdel','del','✕']].concat(t.k==='callout'?[['ta','an','◉']]:[]).forEach(([c,m,g])=>{const h=mk('i',c,g);h.onpointerdown=ev=>txDown(ev,p,t,d,m,upT);d.appendChild(h)});
  L.appendChild(d);setTimeout(upT,0)})}
